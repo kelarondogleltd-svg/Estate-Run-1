@@ -2,156 +2,77 @@
 <html>
 <head>
   <title>Admin Dashboard | Kela Rondogle Ltd</title>
-
-  <!-- Styles -->
   <link rel="stylesheet" href="assets/css/style.css">
-
-  <!-- Chart.js -->
+  
+  <!-- Chart.js for admin charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
 
 <header>
-  <h1>Admin Dashboard</h1>
-  <p>Kela Rondogle Property Management</p>
+  <h1>Admin Dashboard | Kela Rondogle Ltd</h1>
+  <p>Welcome, <span id="adminEmail"></span></p>
 </header>
 
 <div class="container">
 
-  <!-- DASHBOARD CHARTS -->
+  <!-- TENANCY AGREEMENT UPLOAD -->
   <div class="card">
-    <h2>Dashboard Overview</h2>
-    <canvas id="paymentsChart"></canvas>
-    <br><br>
-    <canvas id="maintenanceChart"></canvas>
+    <h2>Upload Tenancy Agreement</h2>
+    <input type="email" id="tenantEmail" placeholder="Tenant Email">
+    <input type="file" id="agreementFile" accept="application/pdf">
+    <button onclick="uploadAgreement()">Upload PDF</button>
   </div>
 
-  <!-- MAINTENANCE REPORTS -->
+  <!-- RENT RECEIPT UPLOAD -->
   <div class="card">
-  <h2>Tenant Messages</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Tenant</th>
-        <th>Message</th>
-        <th>Reply</th>
-      </tr>
-    </thead>
-    <tbody id="messageTable"></tbody>
-  </table>
-</div>
+    <h2>Upload Rent Receipt</h2>
+    <input type="email" id="receiptTenantEmail" placeholder="Tenant Email">
+    <input type="text" id="receiptMonth" placeholder="Month (e.g., April-2025)">
+    <input type="file" id="receiptFile" accept="application/pdf">
+    <button onclick="uploadReceipt()">Upload Receipt</button>
+  </div>
 
-
-  <!-- RENT PAYMENTS -->
+  <!-- TENANT MESSAGES -->
   <div class="card">
-    <h2>Rent Payments</h2>
+    <h2>Tenant Messages</h2>
     <table>
       <thead>
         <tr>
           <th>Tenant</th>
-          <th>Month</th>
-          <th>Amount</th>
-          <th>Status</th>
+          <th>Message</th>
+          <th>Reply</th>
         </tr>
       </thead>
-      <tbody id="rentTable"></tbody>
+      <tbody id="messageTable"></tbody>
     </table>
+  </div>
+
+  <!-- OPTIONAL: MAINTENANCE CHART -->
+  <div class="card">
+    <h2>Monthly Maintenance Summary</h2>
+    <canvas id="maintenanceChartAdmin"></canvas>
+  </div>
+
+  <!-- OPTIONAL: RENT CHART -->
+  <div class="card">
+    <h2>Monthly Rent Summary</h2>
+    <canvas id="rentChartAdmin"></canvas>
+  </div>
+
+  <!-- LOGOUT -->
+  <div class="card">
+    <button onclick="logout()">Logout</button>
   </div>
 
 </div>
 
 <footer>
-  Admin Access Only – Kela Rondogle Ltd
+  Admin Access – Kela Rondogle Ltd
 </footer>
 
-<!-- FIREBASE SDK -->
-<script type="module">
+<!-- LINK ADMIN JS -->
+<script type="module" src="assets/js/admin.js"></script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCqWIGZcZK-eSBYADas0HcK-vP6M7stROE",
-  authDomain: "kelarondogleweb.firebaseapp.com",
-  projectId: "kelarondogleweb",
-  storageBucket: "kelarondogleweb.firebasestorage.app",
-  messagingSenderId: "53900919628",
-  appId: "1:53900919628:web:5ebb7dcf15d20cbef885e9"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-/* =======================
-   AUTH CHECK
-======================= */
-onAuthStateChanged(auth, user => {
-  if(!user){
-    window.location.href = "admin-login.html";
-  } else {
-    loadMaintenance();
-    loadRentPayments();
-    loadCharts();
-  }
-});
-
-/* =======================
-   MAINTENANCE REPORTS
-======================= */
-async function loadMaintenance(){
-  const querySnapshot = await getDocs(collection(db, "maintenanceReports"));
-  maintenanceTable.innerHTML = "";
-
-  querySnapshot.forEach(docSnap => {
-    const d = docSnap.data();
-    maintenanceTable.innerHTML += `
-      <tr>
-        <td>${d.tenantEmail}</td>
-        <td>${d.issue}</td>
-        <td>
-          <select onchange="updateMaintenance('${docSnap.id}', this.value)">
-            <option ${d.status=="Pending"?"selected":""}>Pending</option>
-            <option ${d.status=="In Progress"?"selected":""}>In Progress</option>
-            <option ${d.status=="Completed"?"selected":""}>Completed</option>
-          </select>
-        </td>
-        <td></td>
-      </tr>`;
-  });
-}
-
-window.updateMaintenance = async function(id, status){
-  await updateDoc(doc(db, "maintenanceReports", id), { status });
-}
-
-/* =======================
-   RENT PAYMENTS
-======================= */
-async function loadRentPayments(){
-  const querySnapshot = await getDocs(collection(db, "rentPayments"));
-  rentTable.innerHTML = "";
-
-  querySnapshot.forEach(docSnap => {
-    const d = docSnap.data();
-    rentTable.innerHTML += `
-      <tr>
-        <td>${d.tenantEmail}</td>
-        <td>${d.month}</td>
-        <td>K ${d.amount}</td>
-        <td>
-          <select onchange="updateRent('${docSnap.id}', this.value)">
-            <option ${d.status=="Paid"?"selected":""}>Paid</option>
-            <option ${d.status=="Pending"?"selected":""}>Pending</option>
-            <option ${d.status=="Overdue"?"selected":""}>Overdue</option>
-          </select>
-        </td>
-      </tr>`;
-  });
-}
-
-window.updateRent = async function(id, status){
-  await updateDoc(doc(db, "rentPayments", id), { status });
-}
+</body>
+</html>
