@@ -1,59 +1,75 @@
 <!DOCTYPE html>
 <html>
-   <header>
-  <h1>Tenant Portal</h1>
-  <p>Private access for registered tenants</p>
-</header>
 <head>
   <title>Tenant Login | Kela Rondogle Ltd</title>
   <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; margin:0; }
+    .container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 350px; }
+    .container h2 { text-align: center; margin-bottom: 20px; }
+    input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+    .btn { width: 100%; padding: 10px; background: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .btn:hover { background: #0056b3; }
+    p#error-message { color: red; text-align: center; margin-top: 10px; }
+    header, footer { text-align: center; margin-top: 20px; }
+  </style>
 </head>
 <body>
+
   <div class="container">
-  <div class="card">
     <h2>Tenant Login</h2>
     <input type="email" id="email" placeholder="Email" required>
     <input type="password" id="password" placeholder="Password" required>
     <button class="btn" onclick="login()">Login</button>
-    <p id="message" style="color:red;margin-top:10px;"></p>
+    <p id="message"></p>
   </div>
-</div>
 
-<footer>Tenant Access – Kela Rondogle Ltd</footer>
+  <header>
+    <h1>Tenant Portal</h1>
+    <p>Private access for registered tenants</p>
+  </header>
+
+  <footer>Tenant Access – Kela Rondogle Ltd</footer>
+
   <!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-<!-- Firebase config -->
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCqWIGZcZK-eSBYADas0HcK-vP6M7stROE",
-    authDomain: "kelarondogleweb.firebaseapp.com",
-    projectId: "kelarondogleweb",
-    storageBucket: "kelarondogleweb.firebasestorage.app",
-    messagingSenderId: "53900919628",
-    appId: "1:53900919628:web:5ebb7dcf15d20cbef885e9",
-    measurementId: "G-43WPNP32TM"
-  };
-  firebase.initializeApp(firebaseConfig);
-</script>
+  <!-- Firebase config & login function -->
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCqWIGZcZK-eSBYADas0HcK-vP6M7stROE",
+      authDomain: "kelarondogleweb.firebaseapp.com",
+      projectId: "kelarondogleweb",
+      storageBucket: "kelarondogleweb.firebasestorage.app",
+      messagingSenderId: "53900919628",
+      appId: "1:53900919628:web:5ebb7dcf15d20cbef885e9",
+      measurementId: "G-43WPNP32TM"
+    };
 
-<!-- Tenant login function -->
-<script>
-function login() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
 
-  firebase.auth().signInWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      document.getElementById('message').innerText = "Login successful!";
-      window.location.href = "tenant-portal.html"; // redirect to portal
-    })
-    .catch((error) => {
-      document.getElementById('message').innerText = error.message;
-    });
-}
-</script>
+    // Login function
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      console.log("Email:", email, "Password:", password); // debug
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          console.log("Login successful!");
+          document.getElementById('message').innerText = "Login successful!";
+          window.location.href = "tenant-portal.html";
+        })
+        .catch((error) => {
+          console.error(error);
+          document.getElementById('message').innerText = error.message;
+        });
+    }
+  </script>
 
 </body>
 </html>
