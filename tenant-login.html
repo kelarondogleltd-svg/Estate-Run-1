@@ -1,75 +1,267 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tenant Login | Kela Rondogle Ltd</title>
+  <title>Tenant Portal | Kela Rondogle Ltd</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; margin:0; }
-    .container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 350px; }
-    .container h2 { text-align: center; margin-bottom: 20px; }
-    input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
-    .btn { width: 100%; padding: 10px; background: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    .btn:hover { background: #0056b3; }
-    p#error-message { color: red; text-align: center; margin-top: 10px; }
-    header, footer { text-align: center; margin-top: 20px; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin:0; padding:20px;}
+    h1, h2 { text-align: center; }
+    .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
+    input, textarea { width: 100%; padding: 10px; margin: 10px 0; border-radius:5px; border:1px solid #ccc; }
+    button { padding:10px 20px; border:none; border-radius:5px; background:#007BFF; color:white; cursor:pointer; margin-top:5px;}
+    button:hover { background:#0056b3; }
+    p.message { color:red; text-align:center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px;}
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left;}
+    th { background-color: #f2f2f2; }
+    .file-upload { margin:10px 0; }
+    .pdf-section { margin-top:20px; text-align:center; }
+    .tabs { display:flex; justify-content: space-around; margin-bottom:20px; cursor:pointer; }
+    .tab { padding:10px; background:#ddd; border-radius:5px;}
+    .tab.active { background:#007BFF; color:white; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h2>Tenant Login</h2>
-    <input type="email" id="email" placeholder="Email" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button class="btn" onclick="login()">Login</button>
-    <p id="message"></p>
+<div class="container">
+  <h1>Tenant Portal</h1>
+
+  <!-- Tabs for sections -->
+  <div class="tabs">
+    <div class="tab active" data-tab="report">Maintenance Report</div>
+    <div class="tab" data-tab="history">Report History</div>
+    <div class="tab" data-tab="messages">Messages</div>
+    <div class="tab" data-tab="downloads">Downloads</div>
   </div>
 
-  <header>
-    <h1>Tenant Portal</h1>
-    <p>Private access for registered tenants</p>
-  </header>
+  <!-- Maintenance Report Form -->
+  <div class="tab-content active" id="report">
+    <h2>Submit Maintenance Report</h2>
+    <input type="text" id="report-title" placeholder="Report Title" required>
+    <textarea id="report-desc" placeholder="Describe the issue..." rows="4" required></textarea>
+    <input type="file" id="report-file" class="file-upload">
+    <button onclick="submitReport()">Submit Report</button>
+    <p class="message" id="report-message"></p>
+  </div>
 
-  <footer>Tenant Access – Kela Rondogle Ltd</footer>
+  <!-- Maintenance History -->
+  <div class="tab-content" id="history">
+    <h2>Your Maintenance History</h2>
+    <table id="history-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Status</th>
+          <th>File</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Filled dynamically with JS -->
+      </tbody>
+    </table>
+  </div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <!-- Messages -->
+  <div class="tab-content" id="messages">
+    <h2>Send Message to Admin</h2>
+    <input type="text" id="message-title" placeholder="Message Title">
+    <textarea id="message-body" placeholder="Write your message..." rows="4"></textarea>
+    <button onclick="sendMessage()">Send Message</button>
+    <p class="message" id="message-status"></p>
+    <h3>Previous Messages</h3>
+    <table id="messages-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Message</th>
+          <th>Admin Reply</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-  <!-- Firebase config & login function -->
-  <script>
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyCqWIGZcZK-eSBYADas0HcK-vP6M7stROE",
-      authDomain: "kelarondogleweb.firebaseapp.com",
-      projectId: "kelarondogleweb",
-      storageBucket: "kelarondogleweb.firebasestorage.app",
-      messagingSenderId: "53900919628",
-      appId: "1:53900919628:web:5ebb7dcf15d20cbef885e9",
-      measurementId: "G-43WPNP32TM"
-    };
+  <!-- Downloads -->
+  <div class="tab-content" id="downloads">
+    <h2>Downloads</h2>
+    <p><a href="assets/pdfs/tenant-handbook.pdf" target="_blank">Download Tenant Handbook (PDF)</a></p>
+    <p><a href="assets/pdfs/tenancy-agreement.pdf" target="_blank">Download Your Tenancy Agreement (PDF)</a></p>
+  </div>
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+</div>
 
-    // Login function
-    function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-      console.log("Email:", email, "Password:", password); // debug
+<script>
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCqWIGZcZK-eSBYADas0HcK-vP6M7stROE",
+    authDomain: "kelarondogleweb.firebaseapp.com",
+    projectId: "kelarondogleweb",
+    storageBucket: "kelarondogleweb.firebasestorage.app",
+    messagingSenderId: "53900919628",
+    appId: "1:53900919628:web:5ebb7dcf15d20cbef885e9",
+    measurementId: "G-43WPNP32TM"
+  };
 
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          console.log("Login successful!");
-          document.getElementById('message').innerText = "Login successful!";
-          window.location.href = "tenant-portal.html";
-        })
-        .catch((error) => {
-          console.error(error);
-          document.getElementById('message').innerText = error.message;
-        });
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+
+  // Tab navigation
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Check if tenant is logged in
+  auth.onAuthStateChanged(user => {
+    if(!user){
+      window.location.href = "tenant-login.html";
+    } else {
+      loadHistory(user);
+      loadMessages(user);
     }
-  </script>
+  });
+
+  // Submit maintenance report
+  function submitReport(){
+    const title = document.getElementById('report-title').value;
+    const desc = document.getElementById('report-desc').value;
+    const fileInput = document.getElementById('report-file');
+    const messageEl = document.getElementById('report-message');
+
+    if(!title || !desc){
+      messageEl.innerText = "Please fill in all fields.";
+      return;
+    }
+
+    const user = auth.currentUser;
+    let filePromise = Promise.resolve(null);
+
+    if(fileInput.files.length > 0){
+      const file = fileInput.files[0];
+      const storageRef = storage.ref().child(`reports/${user.uid}/${Date.now()}_${file.name}`);
+      filePromise = storageRef.put(file).then(snap => snap.ref.getDownloadURL());
+    }
+
+    filePromise.then(fileURL => {
+      db.collection("maintenanceReports").add({
+        tenantEmail: user.email,
+        title: title,
+        description: desc,
+        status: "Pending",
+        fileURL: fileURL || null,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(()=>{
+        messageEl.style.color = "green";
+        messageEl.innerText = "Report submitted successfully!";
+        document.getElementById('report-title').value = "";
+        document.getElementById('report-desc').value = "";
+        fileInput.value = "";
+        loadHistory(user);
+      }).catch(err=>{
+        console.error(err);
+        messageEl.style.color = "red";
+        messageEl.innerText = "Error: "+err.message;
+      });
+    }).catch(err=>{
+      console.error(err);
+      messageEl.style.color = "red";
+      messageEl.innerText = "File upload error: "+err.message;
+    });
+  }
+
+  // Load tenant maintenance history
+  function loadHistory(user){
+    const tbody = document.querySelector("#history-table tbody");
+    tbody.innerHTML = "";
+    db.collection("maintenanceReports")
+      .where("tenantEmail","==",user.email)
+      .orderBy("timestamp","desc")
+      .get()
+      .then(snapshot=>{
+        snapshot.forEach(doc=>{
+          const data = doc.data();
+          const date = data.timestamp ? data.timestamp.toDate().toLocaleString() : "";
+          tbody.innerHTML += `<tr>
+            <td>${data.title}</td>
+            <td>${data.description}</td>
+            <td>${data.status}</td>
+            <td>${data.fileURL ? `<a href="${data.fileURL}" target="_blank">View</a>` : "N/A"}</td>
+            <td>${date}</td>
+          </tr>`;
+        });
+      });
+  }
+
+  // Send private message to admin
+  function sendMessage(){
+    const title = document.getElementById('message-title').value;
+    const body = document.getElementById('message-body').value;
+    const statusEl = document.getElementById('message-status');
+    const user = auth.currentUser;
+
+    if(!title || !body){
+      statusEl.innerText = "Please fill in all fields.";
+      return;
+    }
+
+    db.collection("tenantMessages").add({
+      tenantEmail: user.email,
+      title: title,
+      body: body,
+      adminReply: null,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(()=>{
+      statusEl.style.color = "green";
+      statusEl.innerText = "Message sent!";
+      document.getElementById('message-title').value = "";
+      document.getElementById('message-body').value = "";
+      loadMessages(user);
+    }).catch(err=>{
+      statusEl.style.color = "red";
+      statusEl.innerText = "Error: "+err.message;
+    });
+  }
+
+  // Load previous messages
+  function loadMessages(user){
+    const tbody = document.querySelector("#messages-table tbody");
+    tbody.innerHTML = "";
+    db.collection("tenantMessages")
+      .where("tenantEmail","==",user.email)
+      .orderBy("timestamp","desc")
+      .get()
+      .then(snapshot=>{
+        snapshot.forEach(doc=>{
+          const data = doc.data();
+          const date = data.timestamp ? data.timestamp.toDate().toLocaleString() : "";
+          tbody.innerHTML += `<tr>
+            <td>${data.title}</td>
+            <td>${data.body}</td>
+            <td>${data.adminReply || "No reply yet"}</td>
+            <td>${date}</td>
+          </tr>`;
+        });
+      });
+  }
+</script>
 
 </body>
 </html>
