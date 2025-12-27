@@ -1,14 +1,9 @@
-// =======================
-// FIREBASE SDK IMPORTS
-// =======================
+// assets/js/firebase.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
 
-// =======================
-// FIREBASE CONFIGURATION
-// =======================
 const firebaseConfig = {
   apiKey: "AIzaSyCqWIGZcZK-eSBYADas0HcK-vP6M7stROE",
   authDomain: "kelarondogleweb.firebaseapp.com",
@@ -19,15 +14,9 @@ const firebaseConfig = {
   measurementId: "G-43WPNP32TM"
 };
 
-// =======================
-// INITIALIZE FIREBASE
-// =======================
 const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
 
-// =======================
-// EXPORT FIREBASE SERVICES
-// =======================
-export const auth = getAuth(app);         // Firebase Authentication
-export const db = getFirestore(app);      // Firestore Database
-export const storage = getStorage(app);   // Firebase Storage
 
