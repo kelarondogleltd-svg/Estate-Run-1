@@ -2,125 +2,91 @@
 <html>
 <head>
   <title>Tenant Portal | Kela Rondogle Ltd</title>
+
   <link rel="stylesheet" href="assets/css/style.css">
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; margin:0; padding:20px;}
-    h1, h2 { text-align: center; }
-    .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
-    input, textarea { width: 100%; padding: 10px; margin: 10px 0; border-radius:5px; border:1px solid #ccc; }
-    button { padding:10px 20px; border:none; border-radius:5px; background:#007BFF; color:white; cursor:pointer; }
-    button:hover { background:#0056b3; }
-    p.message { color:red; text-align:center; }
-    .file-upload { margin:10px 0; }
-    .pdf-section { margin-top:20px; }
-  </style>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
-  <div class="container">
-    <h1>Welcome to Tenant Portal</h1>
-    <p>Submit maintenance reports, upload photos, and access your handbook.</p>
+<header>
+  <h1>Tenant Portal</h1>
+  <p>Welcome, <span id="tenantEmail"></span></p>
+</header>
 
-    <h2>Maintenance Report</h2>
-    <input type="text" id="report-title" placeholder="Report Title" required>
-    <textarea id="report-desc" placeholder="Describe the issue..." rows="4" required></textarea>
-    <input type="file" id="report-file" class="file-upload">
-    <button onclick="submitReport()">Submit Report</button>
-    <p class="message" id="report-message"></p>
+<div class="container">
 
-    <div class="pdf-section">
-      <h2>Tenant Handbook</h2>
-      <a href="assets/pdfs/tenant-handbook.pdf" target="_blank">
-        Download Handbook (PDF)
-      </a>
-    </div>
+  <!-- DASHBOARD OVERVIEW -->
+  <div class="card">
+    <h2>My Dashboard</h2>
+    <canvas id="maintenanceChart"></canvas>
+    <br><br>
+    <canvas id="rentChart"></canvas>
   </div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <!-- TENANCY AGREEMENT -->
+  <div class="card">
+    <h2>Tenancy Agreement</h2>
+    <a id="agreementLink" target="_blank">Download Signed Agreement</a>
+  </div>
 
-  <script>
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCqWIGZcZK-eSBYADas0HcK-vP6M7stROE",
-      authDomain: "kelarondogleweb.firebaseapp.com",
-      projectId: "kelarondogleweb",
-      storageBucket: "kelarondogleweb.firebasestorage.app",
-      messagingSenderId: "53900919628",
-      appId: "1:53900919628:web:5ebb7dcf15d20cbef885e9",
-      measurementId: "G-43WPNP32TM"
-    };
+  <!-- RENT PAYMENT HISTORY -->
+  <div class="card">
+    <h2>Rent Payment History</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Amount (K)</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="rentHistory"></tbody>
+    </table>
+  </div>
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
+  <!-- MAINTENANCE REQUEST -->
+  <div class="card">
+    <h2>Submit Maintenance Request</h2>
+    <textarea id="issue" placeholder="Describe the issue"></textarea>
+    <input type="file" id="photo">
+    <button onclick="submitMaintenance()">Submit</button>
+  </div>
 
-    // Check if user is logged in
-    auth.onAuthStateChanged(user => {
-      if(!user){
-        window.location.href = "tenant-login.html"; // redirect if not logged in
-      }
-    });
+  <!-- MAINTENANCE HISTORY -->
+  <div class="card">
+    <h2>Maintenance History</h2>
+    <ul id="maintenanceHistory"></ul>
+  </div>
 
-    // Submit maintenance report
-    function submitReport(){
-      const title = document.getElementById('report-title').value;
-      const desc = document.getElementById('report-desc').value;
-      const fileInput = document.getElementById('report-file');
-      const messageEl = document.getElementById('report-message');
+  <!-- ADMIN MESSAGES -->
+  <div class="card">
+    <h2>Messages from Management</h2>
+    <ul id="adminReplies"></ul>
+  </div>
 
-      if(!title || !desc){
-        messageEl.innerText = "Please fill in all required fields.";
-        return;
-      }
+  <!-- SEND MESSAGE -->
+  <div class="card">
+    <h2>Message Management</h2>
+    <textarea id="messageText" placeholder="Write a private message"></textarea>
+    <button onclick="sendMessage()">Send Message</button>
+  </div>
 
-      const user = auth.currentUser;
-      if(!user){
-        messageEl.innerText = "You must be logged in to submit reports.";
-        return;
-      }
+  <!-- LOGOUT -->
+  <div class="card">
+    <button onclick="logout()">Logout</button>
+  </div>
 
-      messageEl.innerText = "Submitting report...";
+</div>
 
-      let filePromise = Promise.resolve(null);
+<footer>
+  Tenant Access – Kela Rondogle Ltd
+</footer>
 
-      if(fileInput.files.length > 0){
-        const file = fileInput.files[0];
-        const storageRef = storage.ref().child(`reports/${user.uid}/${Date.now()}_${file.name}`);
-        filePromise = storageRef.put(file).then(snapshot => snapshot.ref.getDownloadURL());
-      }
-
-      filePromise.then(fileURL => {
-        db.collection("maintenanceReports").add({
-          tenantEmail: user.email,
-          title: title,
-          description: desc,
-          fileURL: fileURL || null,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-          messageEl.style.color = "green";
-          messageEl.innerText = "Report submitted successfully!";
-          document.getElementById('report-title').value = "";
-          document.getElementById('report-desc').value = "";
-          fileInput.value = "";
-        }).catch(err => {
-          console.error(err);
-          messageEl.style.color = "red";
-          messageEl.innerText = "Error submitting report: " + err.message;
-        });
-      }).catch(err => {
-        console.error(err);
-        messageEl.style.color = "red";
-        messageEl.innerText = "Error uploading file: " + err.message;
-      });
-    }
-  </script>
+<!-- TENANT LOGIC -->
+<script type="module" src="assets/js/tenant.js"></script>
 
 </body>
 </html>
-
