@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html>
+  <header>
+  <h1>Tenant Portal</h1>
+  <p>Private access for registered tenants</p>
+</header
 <head>
   <title>Tenant Login | Kela Rondogle Ltd</title>
   <link rel="stylesheet" href="assets/css/style.css">
@@ -14,16 +18,14 @@
     <p id="message" style="color:red;margin-top:10px;"></p>
   </div>
 </div>
-</body>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+<footer>Tenant Access – Kela Rondogle Ltd</footer>
+  <!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<!-- Firebase config -->
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyCqWIGZcZK-eSBYADas0HcK-vP6M7stROE",
     authDomain: "kelarondogleweb.firebaseapp.com",
@@ -33,16 +35,29 @@
     appId: "1:53900919628:web:5ebb7dcf15d20cbef885e9",
     measurementId: "G-43WPNP32TM"
   };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+  firebase.initializeApp(firebaseConfig);
 </script>
-<header>
+
+<!-- Tenant login function -->
+<script>
+function login() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      document.getElementById('message').innerText = "Login successful!";
+      window.location.href = "tenant-portal.html"; // redirect to portal
+    })
+    .catch((error) => {
+      document.getElementById('message').innerText = error.message;
+    });
+}
+</script>
+  <header>
   <h1>Tenant Portal</h1>
   <p>Private access for registered tenants</p>
 </header>
 
-<footer>Tenant Access – Kela Rondogle Ltd</footer>
 </body>
 </html>
