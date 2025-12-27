@@ -2,91 +2,50 @@
 <html>
 <head>
   <title>Tenant Portal | Kela Rondogle Ltd</title>
-
   <link rel="stylesheet" href="assets/css/style.css">
-
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
-
 <header>
   <h1>Tenant Portal</h1>
-  <p>Welcome, <span id="tenantEmail"></span></p>
+  <p>Private access for registered tenants</p>
 </header>
 
 <div class="container">
 
-  <!-- DASHBOARD OVERVIEW -->
   <div class="card">
-    <h2>My Dashboard</h2>
-    <canvas id="maintenanceChart"></canvas>
-    <br><br>
-    <canvas id="rentChart"></canvas>
+    <h2>Maintenance Reports</h2>
+    <ul id="maintenanceList"></ul>
   </div>
 
-  <!-- TENANCY AGREEMENT -->
   <div class="card">
-    <h2>Tenancy Agreement</h2>
-    <a id="agreementLink" target="_blank">Download Signed Agreement</a>
-  </div>
-
-  <!-- RENT PAYMENT HISTORY -->
-  <div class="card">
-    <h2>Rent Payment History</h2>
+    <h2>Rent History</h2>
     <table>
       <thead>
-        <tr>
-          <th>Month</th>
-          <th>Amount (K)</th>
-          <th>Status</th>
-        </tr>
+        <tr><th>Month</th><th>Amount</th><th>Status</th></tr>
       </thead>
       <tbody id="rentHistory"></tbody>
     </table>
   </div>
 
-  <!-- MAINTENANCE REQUEST -->
   <div class="card">
-    <h2>Submit Maintenance Request</h2>
-    <textarea id="issue" placeholder="Describe the issue"></textarea>
-    <input type="file" id="photo">
-    <button onclick="submitMaintenance()">Submit</button>
-  </div>
-
-  <!-- MAINTENANCE HISTORY -->
-  <div class="card">
-    <h2>Maintenance History</h2>
-    <ul id="maintenanceHistory"></ul>
-  </div>
-
-  <!-- ADMIN MESSAGES -->
-  <div class="card">
-    <h2>Messages from Management</h2>
+    <h2>Admin Replies</h2>
     <ul id="adminReplies"></ul>
   </div>
 
-  <!-- SEND MESSAGE -->
   <div class="card">
-    <h2>Message Management</h2>
-    <textarea id="messageText" placeholder="Write a private message"></textarea>
-    <button onclick="sendMessage()">Send Message</button>
+    <h2>Rent Receipts</h2>
+    <ul id="receiptList"></ul>
   </div>
 
-  <!-- LOGOUT -->
   <div class="card">
-    <button onclick="logout()">Logout</button>
+    <canvas id="rentChart"></canvas>
+    <canvas id="maintenanceChart"></canvas>
   </div>
 
 </div>
 
-<footer>
-  Tenant Access – Kela Rondogle Ltd
-</footer>
-
-<!-- TENANT LOGIC -->
+<footer>Tenant Access – Kela Rondogle Ltd</footer>
 <script type="module" src="assets/js/tenant.js"></script>
-
 </body>
 </html>
