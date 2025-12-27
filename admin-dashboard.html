@@ -3,8 +3,6 @@
 <head>
   <title>Admin Dashboard | Kela Rondogle Ltd</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  
-  <!-- Chart.js for admin charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -16,7 +14,6 @@
 
 <div class="container">
 
-  <!-- TENANCY AGREEMENT UPLOAD -->
   <div class="card">
     <h2>Upload Tenancy Agreement</h2>
     <input type="email" id="tenantEmail" placeholder="Tenant Email">
@@ -24,7 +21,6 @@
     <button onclick="uploadAgreement()">Upload PDF</button>
   </div>
 
-  <!-- RENT RECEIPT UPLOAD -->
   <div class="card">
     <h2>Upload Rent Receipt</h2>
     <input type="email" id="receiptTenantEmail" placeholder="Tenant Email">
@@ -33,7 +29,6 @@
     <button onclick="uploadReceipt()">Upload Receipt</button>
   </div>
 
-  <!-- TENANT MESSAGES -->
   <div class="card">
     <h2>Tenant Messages</h2>
     <table>
@@ -48,31 +43,28 @@
     </table>
   </div>
 
-  <!-- OPTIONAL: MAINTENANCE CHART -->
   <div class="card">
     <h2>Monthly Maintenance Summary</h2>
     <canvas id="maintenanceChartAdmin"></canvas>
   </div>
 
-  <!-- OPTIONAL: RENT CHART -->
   <div class="card">
     <h2>Monthly Rent Summary</h2>
     <canvas id="rentChartAdmin"></canvas>
   </div>
 
-  <!-- LOGOUT -->
   <div class="card">
     <button onclick="logout()">Logout</button>
   </div>
 
 </div>
 
-<footer>
-  Admin Access – Kela Rondogle Ltd
-</footer>
+<footer>Admin Access – Kela Rondogle Ltd</footer>
 
-<!-- LINK ADMIN JS -->
 <script type="module" src="assets/js/admin.js"></script>
+</body>
+</html>
+
 
 </body>
 </html>
