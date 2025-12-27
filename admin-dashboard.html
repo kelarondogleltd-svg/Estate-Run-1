@@ -2,76 +2,76 @@
 <html>
 <head>
   <title>Admin Dashboard | Kela Rondogle Ltd</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { font-family: Arial, sans-serif; background:#f4f4f4; padding:20px; }
-    h1,h2 { text-align:center; }
-    .card { background:#fff; padding:20px; margin-bottom:20px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
-    input, textarea, select { width:100%; padding:10px; margin:8px 0; }
-    button { background:#007BFF; color:#fff; padding:10px; border:none; border-radius:5px; cursor:pointer; }
-    button:hover { background:#0056b3; }
-    table { width:100%; border-collapse:collapse; margin-top:10px; }
-    th, td { border:1px solid #ccc; padding:8px; }
-    th { background:#eee; }
-    .logout { background:#dc3545; }
-  </style>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
-<h1>Admin Dashboard</h1>
+<header>
+  <h1>Admin Dashboard</h1>
+  <p>Kela Rondogle Property Management</p>
+</header>
 
-<button class="logout" onclick="logout()">Logout</button>
+<div class="container">
 
-<!-- UPLOAD TENANCY AGREEMENT -->
-<div class="card">
-  <h2>Upload Signed Tenancy Agreement</h2>
-  <input type="email" id="tenantEmail" placeholder="Tenant Email">
-  <input type="file" id="agreementFile" accept="application/pdf">
-  <button onclick="uploadAgreement()">Upload Agreement</button>
-  <p id="uploadStatus"></p>
+  <!-- DASHBOARD CHARTS -->
+  <div class="card">
+    <h2>Dashboard Overview</h2>
+    <canvas id="paymentsChart"></canvas>
+    <br><br>
+    <canvas id="maintenanceChart"></canvas>
+  </div>
+
+  <!-- MAINTENANCE REPORTS -->
+  <div class="card">
+    <h2>Maintenance Reports</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tenant</th>
+          <th>Issue</th>
+          <th>Status</th>
+          <th>Update</th>
+        </tr>
+      </thead>
+      <tbody id="maintenanceTable"></tbody>
+    </table>
+  </div>
+
+  <!-- RENT PAYMENTS -->
+  <div class="card">
+    <h2>Rent Payments</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tenant</th>
+          <th>Month</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="rentTable"></tbody>
+    </table>
+  </div>
+
 </div>
 
-<!-- MAINTENANCE REPORTS -->
-<div class="card">
-  <h2>Maintenance Reports</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Tenant</th>
-        <th>Title</th>
-        <th>Description</th>
-        <th>Status</th>
-        <th>File</th>
-        <th>Update</th>
-      </tr>
-    </thead>
-    <tbody id="reportsTable"></tbody>
-  </table>
-</div>
+<footer>
+  Admin Access Only – Kela Rondogle Ltd
+</footer>
 
-<!-- TENANT MESSAGES -->
-<div class="card">
-  <h2>Tenant Messages</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Tenant</th>
-        <th>Title</th>
-        <th>Message</th>
-        <th>Reply</th>
-      </tr>
-    </thead>
-    <tbody id="messagesTable"></tbody>
-  </table>
-</div>
+<!-- FIREBASE SDK -->
+<script type="module">
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-<script>
 const firebaseConfig = {
   apiKey: "AIzaSyCqWIGZcZK-eSBYADas0HcK-vP6M7stROE",
   authDomain: "kelarondogleweb.firebaseapp.com",
@@ -81,108 +81,77 @@ const firebaseConfig = {
   appId: "1:53900919628:web:5ebb7dcf15d20cbef885e9"
 };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const storage = firebase.storage();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-/* PROTECT ADMIN PAGE */
-auth.onAuthStateChanged(user => {
-  if (!user || user.email !== "kelarondogleltd@gmail.com") {
-    window.location.href = "tenant-login.html";
+/* =======================
+   AUTH CHECK
+======================= */
+onAuthStateChanged(auth, user => {
+  if(!user){
+    window.location.href = "admin-login.html";
   } else {
-    loadReports();
-    loadMessages();
+    loadMaintenance();
+    loadRentPayments();
+    loadCharts();
   }
 });
 
-/* LOGOUT */
-function logout(){
-  auth.signOut().then(()=>window.location.href="tenant-login.html");
-}
+/* =======================
+   MAINTENANCE REPORTS
+======================= */
+async function loadMaintenance(){
+  const querySnapshot = await getDocs(collection(db, "maintenanceReports"));
+  maintenanceTable.innerHTML = "";
 
-/* UPLOAD AGREEMENT */
-function uploadAgreement(){
-  const email = tenantEmail.value;
-  const file = agreementFile.files[0];
-  const status = uploadStatus;
-
-  if(!email || !file){
-    status.innerText = "Missing email or file.";
-    return;
-  }
-
-  const ref = storage.ref(`agreements/${email}/tenancy-agreement.pdf`);
-  status.innerText = "Uploading...";
-
-  ref.put(file).then(snap => snap.ref.getDownloadURL())
-  .then(url => {
-    return db.collection("tenancyAgreements").doc(email).set({
-      tenantEmail: email,
-      fileURL: url,
-      uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }).then(()=>{
-    status.style.color="green";
-    status.innerText="Agreement uploaded.";
-  }).catch(e=>{
-    status.style.color="red";
-    status.innerText=e.message;
+  querySnapshot.forEach(docSnap => {
+    const d = docSnap.data();
+    maintenanceTable.innerHTML += `
+      <tr>
+        <td>${d.tenantEmail}</td>
+        <td>${d.issue}</td>
+        <td>
+          <select onchange="updateMaintenance('${docSnap.id}', this.value)">
+            <option ${d.status=="Pending"?"selected":""}>Pending</option>
+            <option ${d.status=="In Progress"?"selected":""}>In Progress</option>
+            <option ${d.status=="Completed"?"selected":""}>Completed</option>
+          </select>
+        </td>
+        <td></td>
+      </tr>`;
   });
 }
 
-/* LOAD REPORTS */
-function loadReports(){
-  db.collection("maintenanceReports").get().then(snapshot=>{
-    reportsTable.innerHTML="";
-    snapshot.forEach(doc=>{
-      const d = doc.data();
-      reportsTable.innerHTML += `
-        <tr>
-          <td>${d.tenantEmail}</td>
-          <td>${d.title}</td>
-          <td>${d.description}</td>
-          <td>
-            <select onchange="updateStatus('${doc.id}', this.value)">
-              <option ${d.status=="Pending"?"selected":""}>Pending</option>
-              <option ${d.status=="In Progress"?"selected":""}>In Progress</option>
-              <option ${d.status=="Completed"?"selected":""}>Completed</option>
-            </select>
-          </td>
-          <td>${d.fileURL ? `<a href="${d.fileURL}" target="_blank">View</a>` : "None"}</td>
-          <td></td>
-        </tr>`;
-    });
+window.updateMaintenance = async function(id, status){
+  await updateDoc(doc(db, "maintenanceReports", id), { status });
+}
+
+/* =======================
+   RENT PAYMENTS
+======================= */
+async function loadRentPayments(){
+  const querySnapshot = await getDocs(collection(db, "rentPayments"));
+  rentTable.innerHTML = "";
+
+  querySnapshot.forEach(docSnap => {
+    const d = docSnap.data();
+    rentTable.innerHTML += `
+      <tr>
+        <td>${d.tenantEmail}</td>
+        <td>${d.month}</td>
+        <td>K ${d.amount}</td>
+        <td>
+          <select onchange="updateRent('${docSnap.id}', this.value)">
+            <option ${d.status=="Paid"?"selected":""}>Paid</option>
+            <option ${d.status=="Pending"?"selected":""}>Pending</option>
+            <option ${d.status=="Overdue"?"selected":""}>Overdue</option>
+          </select>
+        </td>
+      </tr>`;
   });
 }
 
-function updateStatus(id, status){
-  db.collection("maintenanceReports").doc(id).update({status});
+window.updateRent = async function(id, status){
+  await updateDoc(doc(db, "rentPayments", id), { status });
 }
-
-/* LOAD MESSAGES */
-function loadMessages(){
-  db.collection("tenantMessages").get().then(snapshot=>{
-    messagesTable.innerHTML="";
-    snapshot.forEach(doc=>{
-      const d = doc.data();
-      messagesTable.innerHTML += `
-        <tr>
-          <td>${d.tenantEmail}</td>
-          <td>${d.title}</td>
-          <td>${d.body}</td>
-          <td>
-            <textarea onchange="reply('${doc.id}', this.value)">${d.adminReply||""}</textarea>
-          </td>
-        </tr>`;
-    });
-  });
-}
-
-function reply(id, text){
-  db.collection("tenantMessages").doc(id).update({adminReply:text});
-}
-</script>
-
-</body>
-</html>
