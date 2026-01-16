@@ -1,61 +1,148 @@
 import { auth, db, storage } from "./firebase.js";
-import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-import { listAll, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
-import { Chart } from "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.esm.js";
+import { collection, getDocs, query, where } 
+from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { listAll, ref, getDownloadURL } 
+from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
+import { Chart } 
+from "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.esm.js";
 
-auth.onAuthStateChanged(async user=>{
-  if(!user) window.location.href="tenant-login.html";
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    window.location.href = "tenant-login.html";
+    return;
+  }
 
-  loadRentHistory(user.email);
-  loadAdminReplies(user.email);
-  renderMaintenanceChart(user.email);
-  loadReceipts(user.email);
+  const email = user.email;
+
+  safe(loadRentHistory, email);
+  safe(loadAdminReplies, email);
+  safe(loadReceipts, email);
+  safe(renderMaintenanceChart, email);
 });
 
-async function loadRentHistory(email){
-  const q=query(collection(db,"rentPayments"),where("tenantEmail","==",email));
-  const snapshot=await getDocs(q);
-  const table=document.getElementById("rentHistory"); table.innerHTML="";
-  let months=[], amounts=[];
-  snapshot.forEach(docSnap=>{
-    const d=docSnap.data();
-    table.innerHTML+=`<tr><td>${d.month}</td><td>K ${d.amount}</td><td>${d.status}</td></tr>`;
-    if(d.status==="Paid"){ months.push(d.month); amounts.push(d.amount); }
-  });
-  renderRentChart(months,amounts);
+// ------------------
+// SAFE EXECUTION
+// ------------------
+function safe(fn, arg) {
+  try {
+    fn(arg);
+  } catch (e) {
+    console.error("Tenant portal error:", e);
+  }
 }
 
-async function loadAdminReplies(email){
-  const q=query(collection(db,"messages"),where("tenantEmail","==",email));
-  const snapshot=await getDocs(q);
-  const list=document.getElementById("adminReplies"); list.innerHTML="";
-  snapshot.forEach(docSnap=>{
-    const d=docSnap.data();
-    if(d.reply){ list.innerHTML+=`<li><strong>Admin:</strong> ${d.reply}</li>`; }
-  });
-}
+// ------------------
+// RENT HISTORY
+// ------------------
+async function loadRentHistory(email) {
+  const table = document.getElementById("rentHistory");
+  if (!table) return;
 
-function renderRentChart(months,amounts){
-  const ctx=document.getElementById("rentChart");
-  new Chart(ctx,{ type:"bar", data:{ labels:months, datasets:[{label:"Rent Paid (K)", data:amounts}] } });
-}
+  const q = query(collection(db, "rentPayments"), where("tenantEmail", "==", email));
+  const snap = await getDocs(q);
+  table.innerHTML = "";
 
-async function renderMaintenanceChart(email){
-  const q=query(collection(db,"maintenanceReports"),where("tenantEmail","==",email));
-  const snapshot=await getDocs(q);
-  const stats={ Pending:0, "In Progress":0, Completed:0 };
-  snapshot.forEach(docSnap=>{ stats[docSnap.data().status]++; });
-  new Chart(document.getElementById("maintenanceChart"),{ type:"pie", data:{ labels:Object.keys(stats), datasets:[{ data:Object.values(stats) }] } });
-}
+  let months = [];
+  let amounts = [];
 
-async function loadReceipts(email){
-  const receiptsRef=ref(storage, `receipts/${email}`);
-  const list=document.getElementById("receiptList"); list.innerHTML="";
-  try{
-    const res=await listAll(receiptsRef);
-    for(const item of res.items){
-      const url=await getDownloadURL(item);
-      list.innerHTML+=`<li><a href="${url}" target="_blank">${item.name}</a></li>`;
+  snap.forEach(d => {
+    const r = d.data();
+    table.innerHTML += `
+      <tr>
+        <td>${r.month || "-"}</td>
+        <td>K ${r.amount || 0}</td>
+        <td>${r.status || "Pending"}</td>
+      </tr>`;
+    if (r.status === "Paid") {
+      months.push(r.month);
+      amounts.push(r.amount);
     }
-  } catch { list.innerHTML="<li>No receipts uploaded yet</li>"; }
+  });
+
+  if (months.length) drawRentChart(months, amounts);
 }
+
+// ------------------
+// ADMIN REPLIES
+// ------------------
+async function loadAdminReplies(email) {
+  const list = document.getElementById("adminReplies");
+  if (!list) return;
+
+  const q = query(collection(db, "messages"), where("tenantEmail", "==", email));
+  const snap = await getDocs(q);
+  list.innerHTML = "";
+
+  snap.forEach(d => {
+    const m = d.data();
+    if (m.reply) {
+      list.innerHTML += `<li><strong>Admin:</strong> ${m.reply}</li>`;
+    }
+  });
+
+  if (!list.innerHTML) list.innerHTML = "<li>No replies yet</li>";
+}
+
+// ------------------
+// MAINTENANCE CHART
+// ------------------
+async function renderMaintenanceChart(email) {
+  const canvas = document.getElementById("maintenanceChart");
+  if (!canvas) return;
+
+  const q = query(collection(db, "maintenanceReports"), where("tenantEmail", "==", email));
+  const snap = await getDocs(q);
+
+  let stats = { Pending: 0, "In Progress": 0, Completed: 0 };
+
+  snap.forEach(d => {
+    const s = d.data().status || "Pending";
+    if (stats[s] !== undefined) stats[s]++;
+  });
+
+  new Chart(canvas, {
+    type: "pie",
+    data: {
+      labels: Object.keys(stats),
+      datasets: [{ data: Object.values(stats) }]
+    }
+  });
+}
+
+// ------------------
+// RENT CHART
+// ------------------
+function drawRentChart(months, amounts) {
+  const canvas = document.getElementById("rentChart");
+  if (!canvas) return;
+
+  new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: months,
+      datasets: [{ label: "Rent Paid (K)", data: amounts }]
+    }
+  });
+}
+
+// ------------------
+// RECEIPTS
+// ------------------
+async function loadReceipts(email) {
+  const list = document.getElementById("receiptList");
+  if (!list) return;
+
+  const folder = ref(storage, `receipts/${email}`);
+  list.innerHTML = "";
+
+  try {
+    const res = await listAll(folder);
+    for (const item of res.items) {
+      const url = await getDownloadURL(item);
+      list.innerHTML += `<li><a href="${url}" target="_blank">${item.name}</a></li>`;
+    }
+  } catch {
+    list.innerHTML = "<li>No receipts uploaded</li>";
+  }
+}
+
